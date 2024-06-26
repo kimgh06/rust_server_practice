@@ -22,8 +22,27 @@ impl From<String> for HttpRequest {
         let mut parsed_headers = HashMap::new();
         let mut parsed_msg_body = "";
 
-        for line in req.lines(){
-          if()
+        for line in req.lines() {
+            if line.contains("HTTP") {
+                let (method, resource, version) = process_req_line(line);
+                parsed_method = method;
+                parsed_version = version;
+                parsed_resource = resource;
+            } else if line.contains(":") {
+                let (key, value) = process_header_line(line);
+                parsed_headers.insert(key, value);
+            } else if line.len() == 0 {
+                //message body
+            } else {
+                parsed_msg_body = line;
+            }
+        }
+        HttpRequest {
+            method: parsed_method,
+            version: parsed_version,
+            resource: parsed_resource,
+            headers: parsed_headers,
+            msg_body: parsed_msg_body.to_string(),
         }
     }
 }
@@ -89,7 +108,7 @@ mod tests {
         let mut headers_expected = HashMap::new();
         headers_expected.insert("Host".into(), " localhost".into());
         headers_expected.insert("Accept".into(), " */*".into());
-        headers_expected.insert("User-Agent".into(), " curl/7.64.1.".into());
+        headers_expected.insert("User-Agent".into(), " curl/7.64.1".into());
         let req: HttpRequest = s.into();
         assert_eq!(Method::Get, req.method);
         assert_eq!(Version::V1_1, req.version);
